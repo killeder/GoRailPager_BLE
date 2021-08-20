@@ -4,7 +4,7 @@
 *          application and system layer(aka. Hi-Layers).
 *@author   Xie Yingnan(xieyingnan1994@163.com��
 *@version  1.0
-*@date     2021/02/12
+*@date     2021/08/20
 -----------------------------------------------------------------------*/
 #ifndef GORAILPAGER_BLE_H
 #define GORAILPAGER_BLE_H
@@ -37,7 +37,7 @@
 #endif
 /* Version and build info strings */
 #define APP_NAME_STR "GoRailPager_BLE"
-#define VERTION_STR "1.1.0"
+#define VERTION_STR "1.0.0"
 #define BUILD_DATE_STR __DATE__
 #define BUILD_TIME_STR __TIME__
 #endif

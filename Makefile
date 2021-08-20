@@ -39,11 +39,9 @@ C_SOURCES =  \
 	App_User/RF_Radio_Utility.c \
 	Sys_Utils/delay.c \
 	Sys_Utils/POCSAG_ParseLBJ.c \
-	Hardware/HW_LedAndBuzzer.c \
-	Hardware/HW_MultiKeys.c \
+	Hardware/HW_LED.c \
 	Hardware/HW_RADIO_CC1101.c \
 	Hardware/HW_TIM_Timebase.c \
-	Hardware/HW_TM1640_LED.c \
 	Hardware/HW_USART.c \
 	FirmwareLibs/stm32f0xx_exti.c \
 	FirmwareLibs/stm32f0xx_gpio.c \

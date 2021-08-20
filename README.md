@@ -102,7 +102,7 @@ CC1101 shoud be configured an follow:
 
 |  Content | Function  | Example |  Direction |
 | :------------: | :------------: | :------------: | :------------: |
-| ${train direction:X,S},{train code},{speed},{miles},{RSSI},{RSSI level}$ |LBJ alerting message   | `$S,4230,104,168.0,-105.0,2$ $X,47963,45,22.5,-85.5,3$`|HC08 -> Terminal(MobilePhone)|
+| ${train direction:X,S},{train code},{speed},{miles},{RSSI in dBm},{RSSI level}$ |LBJ alerting message   | `$S,4230,104,168.0,-105.0,2$ $X,47963,45,22.5,-85.5,3$`|HC08 -> Terminal(MobilePhone)|
 | #VBAT:{battery voltage in mV},{battery level}# | Report battery voltage and level  | `#VBAT:3756,3#`|HC08 -> Terminal(MobilePhone)|
 | #BATT_ALM:{battery voltage in mV}# | Low battery alarm  | `#BATT_ALM:3456#`|HC08 -> Terminal(MobilePhone)|
 | #VBAT_CHK# | Check battery voltage  | `#VBAT_CHK#`|Terminal(MobilePhone) -> HC08|

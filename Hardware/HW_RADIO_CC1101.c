@@ -36,10 +36,10 @@
 
 #define CC1101_IRQ_PORT 	GPIOB 					//CC1101中断引脚PC0(连接到GDO2)
 #define CC1101_IRQ_CLOCK 	RCC_AHBPeriph_GPIOB
-#define CC1101_IRQ_PIN		GPIO_Pin_0
+#define CC1101_IRQ_PIN		GPIO_Pin_1
 #define CC1101_IRQ_PORTSOURCE 	EXTI_PortSourceGPIOB	//外部中断端口源
-#define CC1101_IRQ_PINSOURCE 	EXTI_PinSource0		//外部中断引脚源
-#define CC1101_IRQ_LINE		EXTI_Line0				//外部中断线
+#define CC1101_IRQ_PINSOURCE 	EXTI_PinSource1		//外部中断引脚源
+#define CC1101_IRQ_LINE		EXTI_Line1				//外部中断线
 #define CC1101_IRQ_IRQn		EXTI0_1_IRQn			//外部中断标号(位于stm32f0xx.h头文件)
 #define CC1101_IRQ_Handler  EXTI0_1_IRQHandler	//外部中断响应程序入口(位于s启动文件中)
 
