@@ -1,13 +1,13 @@
 /*-----------------------------------------------------------------------
-*@file     GoRailPager_7Seg.h
+*@file     GoRailPager_BLE.h
 *@brief    Project global include file, should be included in 
 *          application and system layer(aka. Hi-Layers).
-*@author   Xie Yingnan(xieyingnan1994@163.com£©
+*@author   Xie Yingnan(xieyingnan1994@163.comï¿½ï¿½
 *@version  1.0
 *@date     2021/02/12
 -----------------------------------------------------------------------*/
-#ifndef GORAILPAGER_7SEG_H
-#define GORAILPAGER_7SEG_H
+#ifndef GORAILPAGER_BLE_H
+#define GORAILPAGER_BLE_H
 /*-------------Chip layer supporting-------------*/
 #include "stm32f0xx.h"
 /*--------------Standard library of C------------*/
@@ -36,7 +36,7 @@
 		#define DEBUG_MSG(...)
 #endif
 /* Version and build info strings */
-#define APP_NAME_STR "GoRailPager_7Seg"
+#define APP_NAME_STR "GoRailPager_BLE"
 #define VERTION_STR "1.1.0"
 #define BUILD_DATE_STR __DATE__
 #define BUILD_TIME_STR __TIME__

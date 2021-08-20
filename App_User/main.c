@@ -1,11 +1,11 @@
 /*-----------------------------------------------------------------------
 *@file     main.c
-*@brief    GoRailPager_7Seg main procedure
+*@brief    GoRailPager_BLE main procedure
 *@author   Xie Yinanan(xieyingnan1994@163.com)
 *@version  1.0
 *@date     2020/08/28
 -----------------------------------------------------------------------*/
-#include "GoRailPager_7Seg.h"
+#include "GoRailPager_BLE.h"
 /*-----------------------------------------------------------------------
 *@brief		Intializations of several basic hardwares
 *@param		none

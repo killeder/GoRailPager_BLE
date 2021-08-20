@@ -5,7 +5,7 @@
 *@version  1.0
 *@date     2020/08/28
 -----------------------------------------------------------------------*/
-#include "GoRailPager_7Seg.h"
+#include "GoRailPager_BLE.h"
 const uint8_t FixedScrPattern[][16] = 
 { 	//0.Normal screen
  {0x50,0x7b,0x5f,0x5e,0x6e,0x40,0x40,0x40,	//ready---

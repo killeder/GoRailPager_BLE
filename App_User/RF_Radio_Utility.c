@@ -5,7 +5,7 @@
 *@version  1.0
 *@date     2020/08/05
 -----------------------------------------------------------------------*/
-#include "GoRailPager_7Seg.h"
+#include "GoRailPager_BLE.h"
 
 volatile bool bRadioDataArrival = false;//flag to indicate radio data arrived
 /*-----------------------------------------------------------------------
