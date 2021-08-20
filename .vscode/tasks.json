@@ -1,0 +1,57 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "dependsOn": "Clean",
+            "label": "Build",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-j4"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean"
+            ],
+            "problemMatcher": "$gcc"
+        },
+        {
+            "dependsOn": "Build",
+            "label": "OpenOCD - Flash Program",
+            "type": "shell",
+            "command": "openocd",
+            "args": [
+                "-f",
+                "interface/jlink-swd.cfg",
+                "-f",
+                "target/stm32f0x.cfg",
+                "-c",
+                "program ./build/${workspaceFolderBasename}.elf verify reset exit"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "OpenOCD - Start Telnet&GDB Server",
+            "type": "shell",
+            "command": "openocd",
+            "args": [
+                "-f",
+                "interface/jlink-swd.cfg",
+                "-f",
+                "target/stm32f0x.cfg",
+            ],
+            "problemMatcher": []
+        }        
+    ]
+}
