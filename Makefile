@@ -3,6 +3,7 @@
 # (based on arm-none-eabi-gcc)
 # ChangeLog :
 #   2021-06-28 - first version
+#	2021-08-20 - Change MCU from STM32F030K6 to STM32F070F6
 # Author : Xie Yingnan (xieyingnan1994@163.com)
 # ------------------------------------------------
 
@@ -55,7 +56,7 @@ C_SOURCES =  \
 
 # ASM sources
 ASM_SOURCES =  \
-CMSIS/startup_stm32f030.s \
+CMSIS/startup_stm32f070x6.s \
 
 #######################################
 # binaries
@@ -99,7 +100,8 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_STDPERIPH_DRIVER \
--DSTM32F030
+-DSTM32F070x6 \
+-DPOCSAG_DEBUG_MSG_ON
 
 
 # AS includes
@@ -131,7 +133,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F030K6_Flash.ld
+LDSCRIPT = STM32F070x6_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 

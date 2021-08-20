@@ -1,5 +1,5 @@
 # GoRailPager_BLE
-> A device for receiving and repeating POCSAG formatted ChinaRail "LBJ" message which has the meaning of train arrival alert. The project is based on TI CC1101 RF solution and STM32F030F6P6 microcontroller. First, the apparatus receive and decode the 2-FSK modulated digital baseband raw data using CC1101. Besides, the programs parse the raw data according to the POCSAG formate regulations. Finally, repeate the LBJ message via Bluetooth 4.0 smart (BLE) interface to data receiving terminals (e.g. mobile phones) for further post processing or storge. This project is the practical and extended version of project "CC1101_Rx_LBJ".(See git@github.com:XieYingnan-Hideo/CC1101_Rx_LBJ.git) For the hardware design, such as schematic diagram and printed circuit board layout of this device, please visit the [repository](https://lceda.cn/Xie-Yingnan/gorailpager_ble) hosted by lceda.cn.
+> A device for receiving and repeating POCSAG formatted ChinaRail "LBJ" message which has the meaning of train arrival alert. The project is based on TI CC1101 RF solution and STM32F070F6P6 microcontroller. First, the apparatus receive and decode the 2-FSK modulated digital baseband raw data using CC1101. Besides, the programs parse the raw data according to the POCSAG formate regulations. Finally, repeate the LBJ message via Bluetooth 4.0 smart (BLE) interface to data receiving terminals (e.g. mobile phones) for further post processing or storge. This project is the practical and extended version of project "CC1101_Rx_LBJ".(See git@github.com:XieYingnan-Hideo/CC1101_Rx_LBJ.git) For the hardware design, such as schematic diagram and printed circuit board layout of this device, please visit the [repository](https://lceda.cn/Xie-Yingnan/gorailpager_ble) hosted by lceda.cn.
 
 ## Basic infomation
 - Project Name: GoRailPager_BLE
@@ -9,8 +9,8 @@
 
 ## Hardware requirements
 ### 0. CPU
-ARM Cortex-M0 STM32F030F6P6 (Package:TSSOP-20)
-### 1.TI CC1101 RF solutioin(Operated on STM32F030 SPI1)
+ARM Cortex-M0 STM32F070F6P6 (Package:TSSOP-20)
+### 1.TI CC1101 RF solutioin(Operated on STM32F070F6 SPI1)
 **fCLK = 6MHz**
 
 | Function | MOSI   | MISO    |SCLK    | CS         | IRQ(GDO2) |
