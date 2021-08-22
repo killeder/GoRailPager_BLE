@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------
-*@file     Human_Interface.c
+*@file     Transfer_Utils.c
 *@brief    Human interface and displaying utilities
 *@author   Xie Yingnan(xieyingnan1994@163.com)
 *@version  1.0
@@ -26,7 +26,6 @@ void ShowBuildInfo(void)
 void ShowMessageLBJ(POCSAG_RESULT* POCSAG_Msg)
 {
 	//Store traincode/speed/milemark in led segment pattern
-	uint8_t LBJ_Info[15] = {0};
 	/*	string "POCSAG_Msg->txtMsg" normally holds 15 characters. i.e.
 		"47963<sp>100<sp>23456". Symbol <sp> signifies space, aka.'\0x20'.
 		the "-" character could also appear in above string, sinifying 
@@ -57,56 +56,4 @@ void ShowRSSILevel(float rssi)
 		level = 1;	//-105dBm ~ -100dBm
 	else
 		level = 0;	//<-105dBm
-}
-/*-----------------------------------------------------------------------
-*@brief		Handler of led blinking, called by Timebase
-*@param		none
-*@retval	none
------------------------------------------------------------------------*/
-static void LedBlinkHandler(void)
-{
-	static uint8_t cnt_status_blink = 0;
-	static uint8_t cnt_decode_blink = 0;
-	//status led blink
-	switch(StatusBlinkMode)	//status led
-	{
-	case BLINK_FAST:
-		if(++cnt_status_blink >= 10)	//cycle100ms,50%duty
-		{ STATUS_LED_TOGGLE(); cnt_status_blink = 0; }
-		break;
-	case BLINK_SLOW:
-		if(cnt_status_blink <= 20) {STATUS_LED_ON();}	//on 200ms
-		else {STATUS_LED_OFF();}			//off 1480ms
-		if(++cnt_status_blink >= 150)				//cycle 1500ms
-			cnt_status_blink = 0;
-		break;
-	case BLINK_OFF:
-		STATUS_LED_OFF();
-		cnt_status_blink = 0;
-		StatusBlinkMode = BLINK_UNDEFINED;
-		break;
-	default:		
-		break;
-	}
-}
-/*-----------------------------------------------------------------------
-*@brief		Timer IRQ for providing Time-base for indicators use
-*@detail 	Timer IRQ cycle is determined when Timer init.
-*         	1ms in this program.
-*@param		none
-*@retval	none
------------------------------------------------------------------------*/
-void TIMEBASE_IRQHandler(void)
-{
-	static uint8_t timebase_cnt = 0;
-
-	if(TIM_GetITStatus(TIMEBASE_TIM,TIM_IT_Update)!=RESET)
-	{
-		if(timebase_cnt%10 == 0)//handle led and buzzer every 10ms
-		{
-			LedBlinkHandler();	//for led blink	
-		}
-		++timebase_cnt;
-	}
-	TIM_ClearITPendingBit(TIMEBASE_TIM,TIM_IT_Update);
 }

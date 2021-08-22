@@ -27,3 +27,34 @@ void LED_Init(void)
 
 	STATUS_LED_OFF();
 }
+/*-----------------------------------------------------------------------
+*@brief		Handler of led blinking, called by Timebase
+*@param		none
+*@retval	none
+-----------------------------------------------------------------------*/
+void LedBlinkHandler(void)
+{
+	static uint8_t cnt_status_blink = 0;
+	static uint8_t cnt_decode_blink = 0;
+	//status led blink
+	switch(StatusBlinkMode)	//status led
+	{
+	case BLINK_FAST:
+		if(++cnt_status_blink >= 10)	//cycle100ms,50%duty
+		{ STATUS_LED_TOGGLE(); cnt_status_blink = 0; }
+		break;
+	case BLINK_SLOW:
+		if(cnt_status_blink <= 20) {STATUS_LED_ON();}	//on 200ms
+		else {STATUS_LED_OFF();}			//off 1480ms
+		if(++cnt_status_blink >= 150)				//cycle 1500ms
+			cnt_status_blink = 0;
+		break;
+	case BLINK_OFF:
+		STATUS_LED_OFF();
+		cnt_status_blink = 0;
+		StatusBlinkMode = BLINK_UNDEFINED;
+		break;
+	default:		
+		break;
+	}
+}

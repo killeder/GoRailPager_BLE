@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------
-*@file     RF_Radio_Utility.c
+*@file     Radio_Utils.c
 *@brief    Radio signal receiving utilities
 *@author   Xie Yinanan(xieyingnan1994@163.com)
 *@version  1.0
@@ -70,13 +70,13 @@ void RxData_Handler(void)
 	{
 		memset(batch_buff,0,batch_len);	//clear codeword buffer
 		CC1101_ReadDataFIFO(batch_buff,&actual_len);//read raw data from FIFO
-		float rssi = CC1101_GetRSSI();//for CC1101 turned to IDLE mode afer rx
+		int32_t rssi_10x_int = (int32_t)(CC1101_GetRSSI()*10.0);
 		uint8_t lqi = CC1101_GetLQI();//RSSI and LQI here is in correspondence
 									  //with current batch of raw data
 
 		MSG("\r\n[LBJ Message Arrival]\r\n");
 		MSG("Received %u bytes of raw data.\r\n",actual_len);
-		MSG("RSSI:%d.%d\r\n",(int32_t)rssi, ((int32_t)(rssi*10))*(-1)%10);
+		MSG("RSSI:%d.%d\r\n",rssi_10x_int/10, (0-rssi_10x_int)%10);
 		MSG("LQI:%u\r\n",lqi);
 		MSG("Raw data:\r\n");
 		for(uint32_t i=0;i < actual_len;i++)
@@ -95,8 +95,8 @@ void RxData_Handler(void)
 			MSG("LBJ Message:%s.\r\n",PocsagMsg.txtMsg);//show decoded text message
 			if(PocsagMsg.Address == LBJ_MESSAGE_ADDR)
 			{
-				ShowMessageLBJ(&PocsagMsg);	//show LBJ message on 7-seg LED
-				ShowRSSILevel(rssi);	//show rssi level on 7-seg LED
+				//transfer LBJ message & rssi via BLE
+				BLE_TransferLBJ(&PocsagMsg,rssi_10x_int);
 			}
 		}
 		else

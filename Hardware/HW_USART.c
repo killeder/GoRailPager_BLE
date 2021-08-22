@@ -8,10 +8,10 @@
 #include "Hardware.h"
 
 #define TRACE_PRINTF_BUFFER_SIZE	128	//trace printf buffer size
-//#define USART1_RX_BUFFER_SIZE	81	//USART1 Rx buffer size
+#define USART1_RX_BUFFER_SIZE	81	//USART1 Rx buffer size
 char Trace_Buffer[TRACE_PRINTF_BUFFER_SIZE];//buffer for trace printf
-//char USART1_RxBuffer[USART1_RX_BUFFER_SIZE];     //rx buffer, suffixed by '\0'
-//uint8_t USART1_RxState = 0;     //rx state, MSB signifies rx completeness
+char USART1_RxBuffer[USART1_RX_BUFFER_SIZE];     //rx buffer, suffixed by '\0'
+uint8_t USART1_RxState = 0;     //rx state, MSB signifies rx completeness
 /*-----------------------------------------------------------------------
 *@brief		trace printf
 *@param		formatted string like std printf() function
@@ -47,7 +47,7 @@ void HW_USART1_Init(uint32_t BaudRate)
 	//GPIO port setting
 	GPIO_InitTypeDef GPIO_InitStructure;
 	USART_InitTypeDef USART_InitStructure;
-	//NVIC_InitTypeDef NVIC_InitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
 	 
   	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA,ENABLE);//open port clock
   	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1,ENABLE);//open usart clock
@@ -69,14 +69,14 @@ void HW_USART1_Init(uint32_t BaudRate)
 	USART_InitStructure.USART_Mode = /*USART_Mode_Rx|*/USART_Mode_Tx;	//only tx
 	USART_Init(USART1, &USART_InitStructure); //init. usart1
 	//USART1 NVIC setting
-/*
+
 	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPriority = 1 ;//priority（0-3）
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;	//enableIRQ channel
 	NVIC_Init(&NVIC_InitStructure);	//initialize nvic
   
 	USART_ITConfig(USART1,USART_IT_RXNE,ENABLE);//toggle on rx interrupt
-*/
+
 	
 	USART_Cmd(USART1,ENABLE);//enable usart1
 }
@@ -85,7 +85,7 @@ void HW_USART1_Init(uint32_t BaudRate)
 *@param		none
 *@retval	none
 -----------------------------------------------------------------------*/
-/*void USART1_IRQHandler(void)
+void USART1_IRQHandler(void)
 {
 	char Res;
 	
@@ -110,7 +110,7 @@ void HW_USART1_Init(uint32_t BaudRate)
 			}
 		}   		 
      }	
-}*/
+}
 /*-----------------------------------------------------------------------
 *@brief		send one byte via USART1
 *@param		uint8_t data - byte data to send

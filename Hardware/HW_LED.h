@@ -23,4 +23,6 @@ void LED_Init(void);	//初始化与LED连接的GPIO端口
 typedef enum{BLINK_FAST = 0,BLINK_SLOW,BLINK_ONCE,BLINK_OFF,BLINK_UNDEFINED} BLINK_MODE;//状态指示灯闪烁模式
 extern BLINK_MODE StatusBlinkMode;
 
+void LedBlinkHandler(void); //Handler of led blinking, called by Timebase
+
 #endif

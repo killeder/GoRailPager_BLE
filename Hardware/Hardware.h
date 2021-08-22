@@ -23,6 +23,8 @@
 #include "HW_TIM_Timebase.h"	//作为时基的定时器
 #include "HW_LED.h"	//指示灯
 #include "HW_RADIO_CC1101.h"	//CC1101无线芯片驱动程序
+#include "HW_ADConvert.h"
+#include "HW_USART_DMA.h"
 /*-----------宏定义和一些参数------------*/
 #define CRIS_ENTER()	__set_PRIMASK(1)	//进入临界区，关闭总中断
 #define CRIS_EXIT()		__set_PRIMASK(0)	//退出临界区，开启总中断

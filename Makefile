@@ -35,14 +35,18 @@ BUILD_DIR = build
 C_SOURCES =  \
 	CMSIS/system_stm32f0xx.c \
 	App_User/main.c \
-	App_User/Human_Interface.c \
-	App_User/RF_Radio_Utility.c \
+	App_User/Transfer_Utils.c \
+	App_User/Radio_Utils.c \
+	App_User/Timebase_Utils.c \
+	App_User/Battery_Utils.c \
 	Sys_Utils/delay.c \
 	Sys_Utils/POCSAG_ParseLBJ.c \
 	Hardware/HW_LED.c \
 	Hardware/HW_RADIO_CC1101.c \
 	Hardware/HW_TIM_Timebase.c \
 	Hardware/HW_USART.c \
+	Hardware/HW_USART_DMA.c \
+	Hardware/HW_ADConvert.c \
 	FirmwareLibs/stm32f0xx_exti.c \
 	FirmwareLibs/stm32f0xx_gpio.c \
 	FirmwareLibs/stm32f0xx_misc.c \
