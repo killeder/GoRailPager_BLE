@@ -15,7 +15,6 @@ volatile bool bRadioDataArrival = false;//flag to indicate radio data arrived
 -----------------------------------------------------------------------*/
 bool Radio_Init(void)
 {
-	MSG("CC1101 Initializing...\r\n");
 	//Frequency:821.2375MHz
 	//1200bps,2FSK,Freq.Dev:4.5khz,RxBW:58.0kHz,Preamble:16Bytes
 	//Fixed packet size 16 bytes, Not allow synccode bit error,
@@ -32,7 +31,6 @@ bool Radio_Init(void)
 	else	//if setup encountered an error
 	{
 		MSG("failed! StateCode:%d\r\n",cc1101_state);
-		MSG("System halt!\r\n");
 		return false;
 	}
 }
@@ -43,7 +41,7 @@ bool Radio_Init(void)
 *           IDLE state afer received packet, raw data is saved in rx FIFO
 *@retval	None
 -----------------------------------------------------------------------*/
-void Rf_Rx_Callback(void)
+void RF_Rx_Callback(void)
 {
 	if(!bRadioDataArrival)
 		bRadioDataArrival = true;//Set data arrival flag
@@ -57,7 +55,7 @@ void Rf_Rx_Callback(void)
 *@param 	none
 *@retval	none
 -----------------------------------------------------------------------*/
-void RxData_Handler(void)
+void RF_RxData_Handler(void)
 {
 	uint8_t* batch_buff = NULL;	//buffer for storge raw codeword data
 	uint32_t batch_len = CC1101_GetPacketLength(false);
@@ -105,5 +103,5 @@ void RxData_Handler(void)
 		}
 		free(batch_buff);
 	}
-	CC1101_StartReceive(Rf_Rx_Callback);	//re-enable rx, wait for data arrival
+	CC1101_StartReceive(RF_Rx_Callback);	//re-enable rx, wait for data arrival
 }

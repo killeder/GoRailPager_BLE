@@ -8,7 +8,7 @@
             "defines": [
                 "STM32F070x6",
                 "USE_STDPERIPH_DRIVER",
-                "POCSAG_DEBUG_MSG_ON"
+                "RADIO_DEBUG_MSG_ON"
             ],
             "compilerPath": "/opt/gcc-arm-none-eabi-10-2020-q4-major/bin/arm-none-eabi-gcc",
             "cStandard": "c99",

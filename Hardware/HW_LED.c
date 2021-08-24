@@ -35,7 +35,6 @@ void LED_Init(void)
 void LedBlinkHandler(void)
 {
 	static uint8_t cnt_status_blink = 0;
-	static uint8_t cnt_decode_blink = 0;
 	//status led blink
 	switch(StatusBlinkMode)	//status led
 	{
@@ -44,8 +43,8 @@ void LedBlinkHandler(void)
 		{ STATUS_LED_TOGGLE(); cnt_status_blink = 0; }
 		break;
 	case BLINK_SLOW:
-		if(cnt_status_blink <= 20) {STATUS_LED_ON();}	//on 200ms
-		else {STATUS_LED_OFF();}			//off 1480ms
+		if(cnt_status_blink <= 50) {STATUS_LED_ON();}	//on 500ms
+		else {STATUS_LED_OFF();}			//off 1000ms
 		if(++cnt_status_blink >= 150)				//cycle 1500ms
 			cnt_status_blink = 0;
 		break;

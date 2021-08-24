@@ -23,15 +23,13 @@ void ShowBuildInfo(void)
 *@param		LBJ_Msg - pointer to text LBJ message
 *@retval	none
 -----------------------------------------------------------------------*/
-void ShowMessageLBJ(POCSAG_RESULT* POCSAG_Msg)
+void BLE_TransferLBJ(POCSAG_RESULT* POCSAG_Msg)
 {
 	//Store traincode/speed/milemark in led segment pattern
 	/*	string "POCSAG_Msg->txtMsg" normally holds 15 characters. i.e.
 		"47963<sp>100<sp>23456". Symbol <sp> signifies space, aka.'\0x20'.
 		the "-" character could also appear in above string, sinifying 
 		non-available of the corresponding infomation.
-		So we should turn the ASCII formated LBJ message to LED pattern,
-		we only intercept the heading 15 characters of "txtMsg" string.
 	*/
 
 }

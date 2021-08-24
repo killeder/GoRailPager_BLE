@@ -1,178 +1,161 @@
-/*********************************************************************************************
-文件名：USART_DMA.h - 使用DMA进行数据收发的串口通讯　 
-编写人：谢英男(E-mail:xieyingnan1994@163.com)　　 　
-编写时间：2018年12月18日　　　　  
-修改日志：								
-**********************************************************************************************
-说明：
-**********************************************************************************************/
-#include "stm32f10x.h"
-#include "Usart_DMA.h"
-//---------------GPIO定义----------------
-#define	USARTx_GPIO_PORT	GPIOA
-#define USARTx_GPIO_CLOCK	RCC_APB2Periph_GPIOA
-#define USARTx_RxPIN		GPIO_Pin_10
-#define	USARTx_TxPIN		GPIO_Pin_9
-//--------------使用的USART定义-----------
-#define USARTx 				USART1
-#define USARTx_CLOCK 		RCC_APB2Periph_USART1
-//--------------中断线定义----------------
-#define	USARTx_IRQ			USART1_IRQn 		//串口中断线
-#define	USARTx_IRQHandler	USART1_IRQHandler	//串口中断响应函数
-#define	Tx_DMA_CH_IRQ		DMA1_Channel4_IRQn 	//DMA串口发送通道的中断线
-#define	Tx_DMA_CH_IRQHandler DMA1_Channel4_IRQHandler//DMA串口发送通道的中断响应函数
-#define	Tx_DMA_CH_IT_TC		DMA1_IT_TC4	//DMA串口发送通道传输完毕中断标志位
-//--------------DMA通道定义--------------
-#define	USARTx_Rx_DMA_CH	DMA1_Channel5	
-#define USARTx_Tx_DMA_CH	DMA1_Channel4
-//------串口状态标识----------------------
-#define	USART_STATE_RECEIVED	0x01	//接收数据完成状态标识
-#define	USART_STATE_NORMAL		0x00	//正常状态标识
-static uint8_t USARTx_Stat  = USART_STATE_NORMAL;//模块私有的串口状态标识，初始化为NORMAL
-static uint16_t ReceivedDataSize;	//模块私有变量，收到数据的长度
-//------接收和发送缓冲区------------------
-uint8_t USARTx_TxBuffer[USARTx_TxBUFFERSIZE];	//发送缓冲区
-uint8_t USARTx_RxBuffer[USARTx_RxBUFFERSIZE];	//接收缓冲区
+/**
+  ******************************************************************************
+  * @file    HW_USART_DMA.c
+  * @author  Xie Yingnan(xieyingnan1994@163.com)
+  * @version V1.0.0
+  * @date    2021-08-23
+  * @brief   This file provides functions to transfer data through USART, based
+  * 		 on DMA(direct memory access).
+  ******************************************************************************
+**/
+#include "Hardware.h"
 
-void USARTx_IRQHandler(void);	//串口USARTx中断响应函数
-void Tx_DMA_CH_IRQHandler(void);	//DMA串口发送通道中断相应函数
-/*---------------------------------------------------------------------------
-函数名：USARTx_DMA_Init
-功能：USARTx+中断+对应DMA发送和接收通道初始化函数
-输入参数：uint32_t BaudRate - 通信波特率
-返回值：无
----------------------------------------------------------------------------*/ 	   
-void USARTx_DMA_Init(uint32_t BaudRate)
+#define USART_DMA_TXSIZE	128	//trace printf buffer size
+#define USART_DMA_RXSIZE	128	//USART1 Rx buffer size
+char USART_DMA_TxBuffer[USART_DMA_TXSIZE];//buffer for DMA send
+char USART_DMA_RxBuffer[USART_DMA_RXSIZE];//buffer for DMA receiving
+volatile bool bUSART_DMA_RxFinish = false;//Flag indicating USART DMA Rx finished
+volatile uint16_t USART_DMA_RxLength = 0; //USART DMA received data length
+
+/**
+  * @brief  inner module for init USART with related GPIOs
+  * @param  baudrate: USART baudrate
+  * @note   The USART init target is USART2 while GPIO is PA2 and PA3
+  * @retval None
+  */
+static void _USART_GPIO_Init(uint32_t BaudRate)
 {
-	GPIO_InitTypeDef 	GPIO_InitStructure;
-	NVIC_InitTypeDef	NVIC_InitStructure;
-	DMA_InitTypeDef		DMA_InitStruct;
-	USART_InitTypeDef	USART_InitStruct;
-//-----------------------1.GPIO配置--------------------------------------
-	RCC_APB2PeriphClockCmd(USARTx_GPIO_CLOCK, ENABLE);
-	//USARTx_TX初始化
-	GPIO_InitStructure.GPIO_Pin = USARTx_TxPIN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;	//Tx复用推挽输出
-	GPIO_Init(USARTx_GPIO_PORT, &GPIO_InitStructure);  
-	//USARTx_RX初始化
-	GPIO_InitStructure.GPIO_Pin = USARTx_RxPIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;//Rx浮空输入
-	GPIO_Init(USARTx_GPIO_PORT, &GPIO_InitStructure);
-//------------------2.串行口和DMA串口发送通道的中断线配置------------------
-	//2.1 USARTx的中断线配置
-	NVIC_InitStructure.NVIC_IRQChannel = USARTx_IRQ;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=3 ;//抢占优先级3
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;		//子优先级1
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			//IRQ通道使能
-	NVIC_Init(&NVIC_InitStructure);	//根据指定的参数初始化NVIC寄存器
-	//2.2 DMA串口发送通道的中断线配置
-	NVIC_InitStructure.NVIC_IRQChannel = Tx_DMA_CH_IRQ;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=3 ;//抢占优先级3
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;		//子优先级2
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			//IRQ通道使能
-	NVIC_Init(&NVIC_InitStructure);	//根据指定的参数初始化NVIC寄存器
-//------------------3.DMA串口发送通道和接收通道配置------------------------
-	//3.1 打开DMA时钟
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1,ENABLE);	//打开DMA1时钟
-	//3.2初始化DMA对应USARTx接收的通道
-	DMA_DeInit(USARTx_Rx_DMA_CH);	//复位DMA通道配置
-	DMA_InitStruct.DMA_PeripheralBaseAddr = (u32)(&(USARTx->DR));//外设基地址：USARTx数据寄存器地址
-	DMA_InitStruct.DMA_MemoryBaseAddr = (u32)USARTx_RxBuffer;	//内存基地址：接收数据缓冲区地址
-	DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralSRC;	//数据来源于外设
-	DMA_InitStruct.DMA_BufferSize = USARTx_RxBUFFERSIZE;	//缓冲区大小：数据目的地大小
-	DMA_InitStruct.DMA_PeripheralInc = DMA_PeripheralInc_Disable;	//外设的地址不递增
-	DMA_InitStruct.DMA_MemoryInc = DMA_MemoryInc_Enable;	//内存的地址递增
-	DMA_InitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;	//外设数据大小为8位
-	DMA_InitStruct.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;	//内存数据大小也为8位
-	DMA_InitStruct.DMA_Mode = DMA_Mode_Normal;	//正常模式，收发完一次就不再收发了而不是循环收发
-	DMA_InitStruct.DMA_Priority = DMA_Priority_High;	//优先级：高
-	DMA_InitStruct.DMA_M2M = DMA_M2M_Disable;	//禁用存储器到存储器模式，因为这里是外设到存储器模式
-	DMA_Init(USARTx_Rx_DMA_CH,&DMA_InitStruct);	//初始化DMA通道
-	DMA_Cmd(USARTx_Rx_DMA_CH,ENABLE);	//使能串口接收DMA通道	
-	//3.3初始化DMA对应USARTx发送的通道
-	DMA_DeInit(USARTx_Tx_DMA_CH);	//复位DMA通道配置
-	DMA_InitStruct.DMA_MemoryBaseAddr = (u32)USARTx_TxBuffer;	//内存基地址：发送数据缓冲区地址
-	DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralDST;	//数据送往外设
-	DMA_InitStruct.DMA_BufferSize = USARTx_TxBUFFERSIZE;	//缓冲区大小：数据目的地大小
-	DMA_Init(USARTx_Tx_DMA_CH,&DMA_InitStruct);	//初始化DMA通道
-	DMA_ITConfig(USARTx_Tx_DMA_CH,DMA_IT_TC,ENABLE);	//将传输完成标志位与中断绑定
-	DMA_Cmd(USARTx_Tx_DMA_CH,DISABLE);	//先关闭串口发送DMA通道
-//-----------------4.初始化USARTx-----------------------------------------
-	RCC_APB2PeriphClockCmd(USARTx_CLOCK, ENABLE);	//打开USARTx时钟
-	USART_InitStruct.USART_BaudRate = BaudRate;//串口波特率
-	USART_InitStruct.USART_WordLength = USART_WordLength_8b;//字长为8位数据格式
-	USART_InitStruct.USART_StopBits = USART_StopBits_1;//一个停止位
-	USART_InitStruct.USART_Parity = USART_Parity_No;//无奇偶校验位
-	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;//无硬件数据流控制
-	USART_InitStruct.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;	//收发模式
-	USART_Init(USARTx,&USART_InitStruct); //初始化串口
-	USART_ITConfig(USARTx,USART_IT_IDLE,ENABLE);//将接收完成总线空闲标志位与中断绑定
-	USART_DMACmd(USARTx,USART_DMAReq_Rx,ENABLE);	//使能接收DMA请求
-	USART_DMACmd(USARTx,USART_DMAReq_Tx,ENABLE);	//使能发送DMA请求
-	USART_Cmd(USARTx, ENABLE);	//使能串口	
+    //GPIO port setting
+    GPIO_InitTypeDef GPIO_InitStructure;
+    USART_InitTypeDef USART_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
+    
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA,ENABLE);//open PORTA clock
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);//open USART2 clock
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2|GPIO_Pin_3;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_PinAFConfig(GPIOA,GPIO_PinSource2,GPIO_AF_1);  //PA2 for USART2 Tx
+    GPIO_PinAFConfig(GPIOA,GPIO_PinSource3,GPIO_AF_1);	//PA3 for USART2 Rx
+    //USART init.
+    USART_InitStructure.USART_BaudRate = BaudRate;//baud rate
+    USART_InitStructure.USART_WordLength = USART_WordLength_8b;//8-bit data
+    USART_InitStructure.USART_StopBits = USART_StopBits_1;//1-bit stop
+    USART_InitStructure.USART_Parity = USART_Parity_No;//none parity check
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;//no flow control
+    USART_InitStructure.USART_Mode = USART_Mode_Rx|USART_Mode_Tx;
+    USART_Init(USART2, &USART_InitStructure); //init. usart2
+    //USART2 NVIC setting
+
+    NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPriority = 1 ;//priority(0-3)
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;	//enableIRQ channel
+    NVIC_Init(&NVIC_InitStructure);	//initialize nvic
+
+    USART_ITConfig(USART2,USART_IT_IDLE|USART_IT_TC,ENABLE);//toggle on USART2 IDLE & TC interrupt
+    USART_ClearFlag(USART2,USART_FLAG_TC);//clear transmittion complete flag
+    USART_DMACmd(USART2,USART_DMAReq_Tx|USART_DMAReq_Rx,ENABLE);//enable USART DMA Tx&Rx request
+    USART_Cmd(USART2,ENABLE);//enable usart2
 }
-/*---------------------------------------------------------------------------
-函数名：USARTx_IRQHandler
-功能：串口USARTx中断响应函数
-输入参数：无
-返回值：无
----------------------------------------------------------------------------*/
-void USARTx_IRQHandler(void)
+/**
+  * @brief  Initializes the USART peripheral according to the baudrate as well as 
+  * 		related GPIOs and DMA 
+  * @param  baudrate: serialport baudrate
+  * @note   The init target here is USART2
+  * @retval None
+  */
+void HW_USART_DMA_Init(uint32_t baudrate)
 {
-	if(USART_GetITStatus(USARTx,USART_IT_IDLE) == SET)
+  DMA_InitTypeDef DMA_InitStructure;
+
+  //init USART with its related GPIOs, as well as enable DMA request  
+  _USART_GPIO_Init(baudrate);
+  
+  RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1,ENABLE);//enable clock of DMA controller
+  //init DMA1-Channel5 (triggered by USART2 Rx DMA request)
+  DMA_DeInit(DMA1_Channel5);
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART2->RDR;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)USART_DMA_RxBuffer;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+  DMA_InitStructure.DMA_BufferSize = USART_DMA_RXSIZE;
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+  DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+  DMA_Init(DMA1_Channel5,&DMA_InitStructure);
+  DMA_Cmd(DMA1_Channel5,ENABLE);  //enable rx DMA channel
+  //init DMA1-Channel4 (triggered by USART2 Tx DMA request)
+  DMA_DeInit(DMA1_Channel4);
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART2->TDR;
+  DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)USART_DMA_TxBuffer;
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
+  DMA_InitStructure.DMA_BufferSize = 0;
+  DMA_Init(DMA1_Channel4,&DMA_InitStructure);
+  //notice:do not enalbe Tx DMA channel here, enable it only before data
+  //sending, and disable it after data sending completed
+}
+/**
+  * @brief  Send buffered data bulk to USART via DMA 
+  * @param  buff: base address of data buffer
+  * @param	length: data length of buffer 
+  * @retval None
+  */
+void HW_USART_DMA_SendBuffer(uint8_t *buff,uint16_t length)
+{
+  if(length == 0)
+    return;
+  if(length > USART_DMA_TXSIZE)
+    length = USART_DMA_TXSIZE;
+  //utilize Tx DMA to send data via USART
+  DMA_Cmd(DMA1_Channel4,DISABLE);  //first turn off Tx DMA channel
+  DMA_SetCurrDataCounter(DMA1_Channel4,length);//then set data length to send
+  DMA_Cmd(DMA1_Channel4,ENABLE);  //finally turn on DMA channel to send data
+}
+/**
+  * @brief  clear rx data buffer and flags 
+  * @retval None
+  */
+void HW_USART_DMA_RxClear(void)
+{
+  //clear rx length, flag of rx finisned, and rx buffer
+  USART_DMA_RxLength = 0;
+  bUSART_DMA_RxFinish = false;
+  memset(USART_DMA_RxBuffer,0,USART_DMA_RXSIZE);
+  //disable Tx DMA channel and clear data counter
+  DMA_Cmd(DMA1_Channel4,DISABLE);
+  DMA_SetCurrDataCounter(DMA1_Channel4,0);
+  //re-enable Rx DMA channel and reset data counter
+  DMA_Cmd(DMA1_Channel5,DISABLE);
+  DMA_SetCurrDataCounter(DMA1_Channel5,USART_DMA_RXSIZE);
+  DMA_Cmd(DMA1_Channel5,ENABLE);
+}
+/**
+  * @brief  USART2 IRQ handler 
+  * @retval None
+  */
+void USART2_IRQHandler(void)
+{
+	if(USART_GetITStatus(USART2, USART_IT_IDLE) != RESET)  //if IDLE interruption arrived
 	{
-		USART_ClearITPendingBit(USARTx,USART_IT_IDLE);
-		USART_ReceiveData(USARTx);
-		DMA_Cmd(USARTx_Rx_DMA_CH,DISABLE);	//先关闭接收DMA避免干扰
-		ReceivedDataSize = USARTx_RxBUFFERSIZE - 
-							 DMA_GetCurrDataCounter(USARTx_Rx_DMA_CH);
-							 //获取已收到数据的大小
-		DMA_SetCurrDataCounter(USARTx_Rx_DMA_CH,USARTx_RxBUFFERSIZE);
-		DMA_Cmd(USARTx_Rx_DMA_CH,ENABLE);	//重启DMA接收通道
-		USARTx_Stat |= USART_STATE_RECEIVED;	//设置接收完成标志位
-	}
-}
-/*---------------------------------------------------------------------------
-函数名：USARTx_CheckDataArrival
-功能：检查是否收到了数据
-输入参数：无
-返回值：uint16_t - 0：没收到数据；other:收到数据，返回收到数据的长度
----------------------------------------------------------------------------*/
-uint16_t USARTx_CheckDataArrival(void)
-{
-	if(USARTx_Stat & USART_STATE_RECEIVED)
-	{
-		USARTx_Stat &= ~USART_STATE_RECEIVED;	//清除接收成功标志位
-		return ReceivedDataSize;
-	}
-	else
-		return 0;	//没收到数据 返回0
-}
-/*---------------------------------------------------------------------------
-函数名：Tx_DMA_CH_IRQHandler
-功能：DMA串口发送通道中断响应函数
-输入参数：无
-返回值：无
----------------------------------------------------------------------------*/
-void Tx_DMA_CH_IRQHandler(void)
-{
-	if(DMA_GetITStatus(Tx_DMA_CH_IT_TC) == SET)	//如果发送通道传送完毕
-	{
-		DMA_ClearITPendingBit(Tx_DMA_CH_IT_TC);
-		DMA_Cmd(USARTx_Tx_DMA_CH,DISABLE);	//关闭发送DMA通道
-	}
-}
-/*---------------------------------------------------------------------------
-函数名：USARTx_StartDMATransmit
-功能：开始一次DMA发送
-输入参数：uint16_t DatSize - 要传送的数据长度
-返回值：无
----------------------------------------------------------------------------*/
-void USARTx_StartDMATransmit(uint16_t DatSize)
-{
-	if(DatSize > USARTx_TxBUFFERSIZE)
-		DatSize = USARTx_TxBUFFERSIZE;	//限制DatSize不超过发送缓冲区大小
-	DMA_SetCurrDataCounter(USARTx_Tx_DMA_CH,DatSize);//设置DMA传送数据量
-	DMA_Cmd(USARTx_Tx_DMA_CH,ENABLE);//启动DMA发送
+    DMA_Cmd(DMA1_Channel5,DISABLE);   
+    USART_DMA_RxLength = USART_DMA_RXSIZE - DMA_GetCurrDataCounter(DMA1_Channel5);
+    bUSART_DMA_RxFinish = true;
+    DMA_SetCurrDataCounter(DMA1_Channel5,USART_DMA_RXSIZE);
+    DMA_Cmd(DMA1_Channel5,ENABLE); 
+    USART_ClearITPendingBit(USART2,USART_IT_IDLE);
+  }
+  else if(USART_GetITStatus(USART2,USART_IT_TC) != RESET) //if Tx completed
+  {
+    //disable Tx DMA channel and clear data counter
+    DMA_Cmd(DMA1_Channel4,DISABLE);
+    DMA_SetCurrDataCounter(DMA1_Channel4,0);
+    USART_ClearITPendingBit(USART2,USART_IT_TC);
+  }
 }

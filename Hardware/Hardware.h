@@ -19,12 +19,12 @@
 /*---------引用自外部的其他模块---------*/
 #include "delay.h"	//基于Systick的公用延时功能，在Sys/Utils层中定义
 /*------各个底层硬件驱动程序头文件集合----*/
-#include "HW_USART.h"	//串行口
+#include "HW_USART.h"	//调试信息打印用串行口
 #include "HW_TIM_Timebase.h"	//作为时基的定时器
 #include "HW_LED.h"	//指示灯
 #include "HW_RADIO_CC1101.h"	//CC1101无线芯片驱动程序
-#include "HW_ADConvert.h"
-#include "HW_USART_DMA.h"
+#include "HW_ADConvert.h"   //用于电池电压检测的AD转换
+#include "HW_USART_DMA.h"   //使用DMA传输的串行口，与BLE模块相连
 /*-----------宏定义和一些参数------------*/
 #define CRIS_ENTER()	__set_PRIMASK(1)	//进入临界区，关闭总中断
 #define CRIS_EXIT()		__set_PRIMASK(0)	//退出临界区，开启总中断

@@ -7,11 +7,12 @@
 -----------------------------------------------------------------------*/
 #include "Hardware.h"
 
-#define TRACE_PRINTF_BUFFER_SIZE	128	//trace printf buffer size
-#define USART1_RX_BUFFER_SIZE	81	//USART1 Rx buffer size
-char Trace_Buffer[TRACE_PRINTF_BUFFER_SIZE];//buffer for trace printf
-char USART1_RxBuffer[USART1_RX_BUFFER_SIZE];     //rx buffer, suffixed by '\0'
-uint8_t USART1_RxState = 0;     //rx state, MSB signifies rx completeness
+#define USART1_TX_BUFFER_SIZE	128	//trace printf buffer size
+#define USART1_RX_BUFFER_SIZE	128	//USART1 Rx buffer size
+char USART1_TxBuffer[USART1_TX_BUFFER_SIZE];//buffer for trace printf
+char USART1_RxBuffer[USART1_RX_BUFFER_SIZE];   //rx buffer, suffixed by '\0'
+volatile bool bUSART1_RxFinish = false;   //Flag indicating USART1 Rx finished
+volatile uint16_t USART1_RxLength = 0;     //USART1 received data length
 /*-----------------------------------------------------------------------
 *@brief		trace printf
 *@param		formatted string like std printf() function
@@ -25,12 +26,12 @@ int Trace_printf(const char* format, ...)
   va_start (ap, format);
 
   // Print to the local buffer
-  ret = vsnprintf (Trace_Buffer, sizeof(Trace_Buffer), format, ap);
+  ret = vsnprintf (USART1_TxBuffer, sizeof(USART1_TxBuffer), format, ap);
   if (ret > 0)
   {						// Transfer the buffer to the device
   	for(int i = 0; i < ret; i++)
   	{
-  		HW_USART1_SendByte((uint8_t)Trace_Buffer[i]);
+  		HW_USART1_SendByte((uint8_t)USART1_TxBuffer[i]);
   	}
   }
 
@@ -66,7 +67,7 @@ void HW_USART1_Init(uint32_t BaudRate)
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;//1-bit stop
 	USART_InitStructure.USART_Parity = USART_Parity_No;//none parity check
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;//no flow control
-	USART_InitStructure.USART_Mode = /*USART_Mode_Rx|*/USART_Mode_Tx;	//only tx
+	USART_InitStructure.USART_Mode = USART_Mode_Rx|USART_Mode_Tx;
 	USART_Init(USART1, &USART_InitStructure); //init. usart1
 	//USART1 NVIC setting
 
@@ -76,7 +77,6 @@ void HW_USART1_Init(uint32_t BaudRate)
 	NVIC_Init(&NVIC_InitStructure);	//initialize nvic
   
 	USART_ITConfig(USART1,USART_IT_RXNE,ENABLE);//toggle on rx interrupt
-
 	
 	USART_Cmd(USART1,ENABLE);//enable usart1
 }
@@ -92,24 +92,24 @@ void USART1_IRQHandler(void)
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)  //if rx interruption arrived
 	{
 		Res = (char)USART_ReceiveData(USART1);	//read one byte
-		if((USART1_RxState & 0x80) == 0)//if rx not completed
+		if(bUSART1_RxFinish == false)//if receiving not completed
 		{
 			if(Res == '\r' || Res == '\n')//if meets <CR> or <LF> character
 			{
-				USART1_RxBuffer[USART1_RxState & 0x7f] = '\0';
+				USART1_RxBuffer[USART1_RxLength] = '\0';
 				//fill current position in rx buffer with '\0'
-				USART1_RxState |= 0x80;//setup rx completeness flag
+				bUSART1_RxFinish = true;//setup rx finish flag
 			}
-			else if(isalnum(Res)||ispunct(Res))	//if received numbers,letters or punctuations
+			else if(isalnum(Res)||ispunct(Res))	//only receive numbers,letters or punctuations
 			{
-				USART1_RxBuffer[USART1_RxState & 0x7f] = Res;//fill in the rx buffer
-				USART1_RxState++;//move rx pointer forwards
-				if(USART1_RxState >= (USART1_RX_BUFFER_SIZE-1))	//if pointer out-of-range
+				USART1_RxBuffer[USART1_RxLength++] = Res;
+				//fill in the rx buffer and move rx pointer forward
+				if(USART1_RxLength >= USART1_RX_BUFFER_SIZE)	//if pointer out-of-range
 					//aka. "Res" occupied the position to be held by the suffix '\0'
-					USART1_RxState = 0;//clear buffer and restart receiving
+					USART1_RxLength = 0;//clear buffer and restart receiving
 			}
-		}   		 
-     }	
+		}
+    }	
 }
 /*-----------------------------------------------------------------------
 *@brief		send one byte via USART1
@@ -120,4 +120,15 @@ void HW_USART1_SendByte(uint8_t data)
 {
 	USART_SendData(USART1,data);
 	while (USART_GetFlagStatus(USART1,USART_FLAG_TXE) == RESET);
+}
+/*-----------------------------------------------------------------------
+*@brief		clear usart rx buffer and flags
+*@param		none
+*@retval	none
+-----------------------------------------------------------------------*/
+void HW_USART1_RxClear(void)
+{
+	bUSART1_RxFinish = false;
+	USART1_RxLength = 0;
+	memset(USART1_RxBuffer,0,USART1_RX_BUFFER_SIZE);
 }

@@ -30,14 +30,18 @@ static void Basic_Hardware_Init(void)
 -----------------------------------------------------------------------*/
 static bool Ex_Hardware_Init(void)
 {
-	bool ret = true;
-
-	ret &= Radio_Init();	//Detect radio CC1101 and initialize
-	ret &= BLE_CheckPresence();	//check HC-08 BLE module presence
-	ret &= Battery_CheckVoltage();	//check battery voltage
-	//if any of above initializing procdures returned false 
-	//the value of "ret" will be "false"
-	return ret;
+	do{
+		if(!Radio_Init());	//Detect radio CC1101 and initialize
+			break;
+		if(!BLE_CheckPresence());	//check HC-08 BLE module presence
+			break;
+		if(!Battery_CheckVoltage());	//check battery voltage
+			break;
+		return true;
+	}while(0);
+	//if any of above initializing procedures failed,
+	//program will jump to here and function will return false
+	return false;
 }
 /*-----------------------------------------------------------------------
 *@brief		main procedure: firmware program entrance
@@ -47,8 +51,6 @@ static bool Ex_Hardware_Init(void)
 int main(void)
 {	
 	Basic_Hardware_Init();	//Initialize basic hardwares
-	ShowBuildInfo();	//Print build info on debug serialport
-
 	//if any of the extended hardware failed to be initialized
 	if(!Ex_Hardware_Init())
 	{
@@ -56,9 +58,10 @@ int main(void)
 		MSG("Fatal error, system halted!\r\n");//print "halt" message
 		while(true);	//infinite loop to halt microcontroller
 	}
+	ShowBuildInfo();	//Print build info on debug serialport
 	//if anything above went okay, then set system status to "normal"
 	//as well as start to receive LBJ messages
-	CC1101_StartReceive(Rf_Rx_Callback);//Start receiving...
+	CC1101_StartReceive(RF_Rx_Callback);//Start receiving...
 	StatusBlinkMode = BLINK_SLOW;	//set status led slowly blink
 	SystemStatus = SYS_NORMAL;	//set system status to "Normal"
 
@@ -70,7 +73,7 @@ int main(void)
 			if(bRadioDataArrival)
 			{
 				//Radio data rx and transfer LBJ message			{
-				RxData_Handler();//Handle rx data on data arrival
+				RF_RxData_Handler();//Handle rx data on data arrival
 				//Clear rx data arrival flag after handle it
 				bRadioDataArrival = false;
 			}
@@ -81,7 +84,7 @@ int main(void)
 		//if it's time to check battery
 		if(bCheckBattery_Flag)//this flag was set in timebase module
 		{
-			if(IsBatteryLow())
+			if(IS_BATTERY_LOW())
 			{
 				//if battery level is low as well as current state is normal
 				//set system state to alarm and status led to fast blink
@@ -104,16 +107,19 @@ int main(void)
 					MSG("Battery OK, resume to normal!\r\n");
 				}
 			}
+			bCheckBattery_Flag = false;
 		}
 		//if serial port data arrived, parse serial command
-		if(bit_IsTrue(USART1_RxState,USART1_RXCOMPLETE_FLAG))
+		if(bUSART1_RxFinish)
 		{
-			Serial_ParseCmd(USART1_RxBuffer);
+			Serial_ParseCmd(USART1_RxBuffer);//parse serial command
+			HW_USART1_RxClear();	//clear buffer after parse
 		}
 		//if BLE data(via serial port) arrived, parse BLE command
-		if(bit_IsTrue(USART_DMA_RxState,USART_DMA_RXCOMPLETE_FLAG))
+		if(bUSART_DMA_RxFinish)
 		{
-			BLE_ParseCmd(USART_DMA_RxBuffer);
+			BLE_ParseCmd(USART_DMA_RxBuffer);//parse BLE command
+			HW_USART_DMA_RxClear();//clear buffer after parse
 		}
 	}
 }

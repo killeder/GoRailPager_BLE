@@ -10,10 +10,8 @@
 
 //Print buildinfo and version info via seiralport
 void ShowBuildInfo(void);
-//Show decoded LBJ message on LCD
-void ShowMessageLBJ(POCSAG_RESULT* POCSAG_Msg);
-//Show RSSI level according to rssi value received
-void ShowRSSILevel(float rssi);
+//Transfer decoded LBJ message on via BLE
+void BLE_TransferLBJ(POCSAG_RESULT* POCSAG_Msg,int32_t rssi_10x_int);
 
 #endif
 
