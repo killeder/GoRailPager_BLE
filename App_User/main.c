@@ -58,7 +58,7 @@ int main(void)
 		MSG("Fatal error, system halted!\r\n");//print "halt" message
 		while(true);	//infinite loop to halt microcontroller
 	}
-	ShowBuildInfo();	//Print build info on debug serialport
+	UART_ShowBuildInfo();	//Print build info on debug serialport
 	//if anything above went okay, then set system status to "normal"
 	//as well as start to receive LBJ messages
 	CC1101_StartReceive(RF_Rx_Callback);//Start receiving...
@@ -112,7 +112,7 @@ int main(void)
 		//if serial port data arrived, parse serial command
 		if(bUSART1_RxFinish)
 		{
-			Serial_ParseCmd(USART1_RxBuffer);//parse serial command
+			UART_ParseCmd(USART1_RxBuffer);//parse serial command
 			HW_USART1_RxClear();	//clear buffer after parse
 		}
 		//if BLE data(via serial port) arrived, parse BLE command

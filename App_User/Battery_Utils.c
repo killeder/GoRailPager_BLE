@@ -42,7 +42,7 @@ uint8_t GetBatteryLevel(uint16_t vbat)
     uint8_t level = 0U;
     for(uint8_t idx = 0;idx < sizeof(Batt_Levels);idx++)
     {
-        if(vbat > Batt_Levels[idx])
+        if(vbat >= Batt_Levels[idx])
             level++;
     }
     return level;//return 0 signifies low battery level
@@ -57,7 +57,7 @@ bool Battery_CheckVoltage(void)
     uint16_t vbat  = GetBatteryVoltage();
     uint8_t level = GetBatteryLevel(vbat);
 
-    MSG("VBAT:")
+    MSG("Battery check:");
     if(level > 0)
     {
         MSG("%umV,level%u,OK.\r\n",vbat,level);
