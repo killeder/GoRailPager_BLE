@@ -31,11 +31,11 @@ static void Basic_Hardware_Init(void)
 static bool Ex_Hardware_Init(void)
 {
 	do{
-		if(!Radio_Init());	//Detect radio CC1101 and initialize
+		if(!Radio_Init())	//Detect radio CC1101 and initialize
 			break;
-		if(!BLE_CheckPresence());	//check HC-08 BLE module presence
+		if(!BLE_CheckPresence())	//check HC-08 BLE module presence
 			break;
-		if(!Battery_CheckVoltage());	//check battery voltage
+		if(!Battery_CheckVoltage())	//check battery voltage
 			break;
 		return true;
 	}while(0);

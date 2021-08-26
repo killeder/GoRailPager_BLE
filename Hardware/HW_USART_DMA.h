@@ -17,6 +17,6 @@ void HW_USART_DMA_RxClear(void);   //clear usart rx buffer and flags
 
 extern volatile uint16_t USART_DMA_RxLength;	//USART1 received data length
 extern volatile bool bUSART_DMA_RxFinish;   //Flag indicating USART1 Rx finished
-extern uint8_t USART_DMA_RxBuffer[];		//USART DMA rx buffer
+extern char USART_DMA_RxBuffer[];		//USART DMA rx buffer
 
 #endif

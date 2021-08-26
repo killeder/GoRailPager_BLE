@@ -15,7 +15,7 @@ void UART_ShowBuildInfo(void);
 //parse command received from serial port
 void UART_ParseCmd(char* CmdStr);
 //Transfer decoded LBJ message on via BLE
-void BLE_TransferLBJ(POCSAG_RESULT* POCSAG_Msg,int32_t rssi_10x_int);
+void BLE_TransferLBJ(POCSAG_RESULT* POCSAG_Msg,int16_t rssi_10x_int);
 //check HC-08 BLE module presence
 bool BLE_CheckPresence(void);
 //send battery alarm message via BLE

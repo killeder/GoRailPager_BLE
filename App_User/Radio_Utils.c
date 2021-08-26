@@ -68,7 +68,7 @@ void RF_RxData_Handler(void)
 	{
 		memset(batch_buff,0,batch_len);	//clear codeword buffer
 		CC1101_ReadDataFIFO(batch_buff,&actual_len);//read raw data from FIFO
-		int32_t rssi_10x_int = (int32_t)(CC1101_GetRSSI()*10.0);
+		int16_t rssi_10x_int = (int16_t)(CC1101_GetRSSI()*10.0);
 		uint8_t lqi = CC1101_GetLQI();//RSSI and LQI here is in correspondence
 									  //with current batch of raw data
 

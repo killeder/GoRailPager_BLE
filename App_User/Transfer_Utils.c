@@ -17,7 +17,7 @@ static uint8_t Get_RSSI_Level(int32_t rssi_10x_int)
 {
   const int32_t notchs[] = {-1050, -1000, -950, -900, -850};
   uint8_t level = 0;
-  for (uint8_t idx = 0; idx < sizeof(notchs); idx++)
+  for (uint8_t idx = 0; idx < 5; idx++)
   {
     if (rssi_10x_int >= notchs[idx])
       level++;
@@ -183,25 +183,25 @@ void UART_ParseCmd(char* CmdStr)
   * @param	rssi_10x_int: 10 times of RSSI value, trimmed to integer
   * @retval None
   */
-void BLE_TransferLBJ(POCSAG_RESULT *POCSAG_Msg, int32_t rssi_10x_int)
+void BLE_TransferLBJ(POCSAG_RESULT *POCSAG_Msg, int16_t rssi_10x_int)
 {
 	/* string "POCSAG_Msg->txtMsg" normally holds 15 characters. i.e.
 		"47963<sp>100<sp>23456". Symbol <sp> signifies space, aka.'\0x20'.
 		the "-" character could also appear in above string, sinifying 
 		non-available of the corresponding infomation.*/
   char LBJ_Info[3][8] = {0};
-  char BLE_DataGram[32] = {0};
-  char dir_ch;
+  char BLE_DataGram[48] = {0};
+  char dir_ch = 'X';
   //split traincode/speed/milemark strings and skim space
   for(uint8_t i=0;i<3;i++)
   {
     TextSkimSpace(LBJ_Info[i],POCSAG_Msg->txtMsg+i*5,5);
   }
   //insert '.' in milemark string
-  uint8_t position = strlen(LBJ_Info[3]);
-  LBJ_Info[3][position] = LBJ_Info[3][position-1];
-  LBJ_Info[3][position-1] = '.';
-  LBJ_Info[3][position+1] = '\0';
+  uint8_t position = strlen(LBJ_Info[2]);
+  LBJ_Info[2][position] = LBJ_Info[2][position-1];
+  LBJ_Info[2][position-1] = '.';
+  LBJ_Info[2][position+1] = '\0';
   //set dir_ch to 'X' or 'S' according to POCSAG function code
   if(POCSAG_Msg->FuncCode == FUNC_SHANGXING)
     dir_ch = 'S';
@@ -209,11 +209,11 @@ void BLE_TransferLBJ(POCSAG_RESULT *POCSAG_Msg, int32_t rssi_10x_int)
     dir_ch = 'X';
   //make up LBJ message BLE datagram
   //e.g. $X,50229,104,1168.0,-105.0,2$
-  sprintf(BLE_DataGram,"$%c,%s,%s,%s,%d.%d,%u$",
+  sprintf(BLE_DataGram,"$%c,%s,%s,%s,%hd.%hd,%hhu$",
           dir_ch,LBJ_Info[0],LBJ_Info[1],LBJ_Info[2],
           rssi_10x_int/10,(0-rssi_10x_int)%10,
           Get_RSSI_Level(rssi_10x_int));        
-  //transmit data gram via USART DMA
+  //transmit datagram via USART DMA
   HW_USART_DMA_SendBuffer((uint8_t*)BLE_DataGram,
                           strlen(BLE_DataGram));
 }
@@ -257,7 +257,7 @@ void BLE_SendBatteryAlarm(void)
   uint16_t vbat  = GetBatteryVoltage();
   char BLE_Msg[16] = {0};
 
-  sprintf(BLE_Msg,"#BATT_ALM:%u#",vbat);
+  sprintf(BLE_Msg,"#BATT_ALM:%hu#",vbat);
   HW_USART_DMA_SendBuffer((uint8_t*)BLE_Msg,
                           strlen(BLE_Msg)); 
 }
@@ -272,7 +272,7 @@ void BLE_SendBatteryVoltage(void)
   uint8_t level = GetBatteryLevel(vbat);
   char BLE_Msg[16] = {0};
 
-  sprintf(BLE_Msg,"#VBAT:%u,%u#",vbat,level);
+  sprintf(BLE_Msg,"#VBAT:%hu,%hhu#",vbat,level);
   HW_USART_DMA_SendBuffer((uint8_t*)BLE_Msg,
                           strlen(BLE_Msg)); 
 }

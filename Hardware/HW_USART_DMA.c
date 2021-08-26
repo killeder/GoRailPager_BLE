@@ -12,7 +12,7 @@
 
 #define USART_DMA_TXSIZE	128	//trace printf buffer size
 #define USART_DMA_RXSIZE	128	//USART1 Rx buffer size
-char USART_DMA_TxBuffer[USART_DMA_TXSIZE];//buffer for DMA send
+uint8_t USART_DMA_TxBuffer[USART_DMA_TXSIZE];//buffer for DMA send
 char USART_DMA_RxBuffer[USART_DMA_RXSIZE];//buffer for DMA receiving
 volatile bool bUSART_DMA_RxFinish = false;//Flag indicating USART DMA Rx finished
 volatile uint16_t USART_DMA_RxLength = 0; //USART DMA received data length
@@ -78,7 +78,7 @@ void HW_USART_DMA_Init(uint32_t baudrate)
   RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1,ENABLE);//enable clock of DMA controller
   //init DMA1-Channel5 (triggered by USART2 Rx DMA request)
   DMA_DeInit(DMA1_Channel5);
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART2->RDR;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&(USART2->RDR);
   DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)USART_DMA_RxBuffer;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
   DMA_InitStructure.DMA_BufferSize = USART_DMA_RXSIZE;
@@ -93,7 +93,7 @@ void HW_USART_DMA_Init(uint32_t baudrate)
   DMA_Cmd(DMA1_Channel5,ENABLE);  //enable rx DMA channel
   //init DMA1-Channel4 (triggered by USART2 Tx DMA request)
   DMA_DeInit(DMA1_Channel4);
-  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART2->TDR;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&(USART2->TDR);
   DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)USART_DMA_TxBuffer;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
   DMA_InitStructure.DMA_BufferSize = 0;
@@ -113,6 +113,7 @@ void HW_USART_DMA_SendBuffer(uint8_t *buff,uint16_t length)
     return;
   if(length > USART_DMA_TXSIZE)
     length = USART_DMA_TXSIZE;
+  memcpy(USART_DMA_TxBuffer,buff,length);
   //utilize Tx DMA to send data via USART
   DMA_Cmd(DMA1_Channel4,DISABLE);  //first turn off Tx DMA channel
   DMA_SetCurrDataCounter(DMA1_Channel4,length);//then set data length to send
@@ -147,6 +148,7 @@ void USART2_IRQHandler(void)
     DMA_Cmd(DMA1_Channel5,DISABLE);   
     USART_DMA_RxLength = USART_DMA_RXSIZE - DMA_GetCurrDataCounter(DMA1_Channel5);
     bUSART_DMA_RxFinish = true;
+    //re-enable Rx DMA channel for receiving next dataframe
     DMA_SetCurrDataCounter(DMA1_Channel5,USART_DMA_RXSIZE);
     DMA_Cmd(DMA1_Channel5,ENABLE); 
     USART_ClearITPendingBit(USART2,USART_IT_IDLE);

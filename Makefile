@@ -55,6 +55,8 @@ C_SOURCES =  \
 	FirmwareLibs/stm32f0xx_syscfg.c \
 	FirmwareLibs/stm32f0xx_tim.c \
 	FirmwareLibs/stm32f0xx_usart.c \
+	FirmwareLibs/stm32f0xx_adc.c \
+	FirmwareLibs/stm32f0xx_dma.c \
 
 # ASM sources
 ASM_SOURCES =  \

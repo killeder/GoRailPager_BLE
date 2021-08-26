@@ -100,7 +100,7 @@ void USART1_IRQHandler(void)
 				//fill current position in rx buffer with '\0'
 				bUSART1_RxFinish = true;//setup rx finish flag
 			}
-			else if(isalnum(Res)||ispunct(Res))	//only receive numbers,letters or punctuations
+			else
 			{
 				USART1_RxBuffer[USART1_RxLength++] = Res;
 				//fill in the rx buffer and move rx pointer forward

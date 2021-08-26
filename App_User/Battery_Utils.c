@@ -40,7 +40,7 @@ uint16_t GetBatteryVoltage(void)
 uint8_t GetBatteryLevel(uint16_t vbat)
 {
     uint8_t level = 0U;
-    for(uint8_t idx = 0;idx < sizeof(Batt_Levels);idx++)
+    for(uint8_t idx = 0;idx < 5;idx++)
     {
         if(vbat >= Batt_Levels[idx])
             level++;
