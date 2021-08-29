@@ -56,8 +56,7 @@ static void _USART_GPIO_Init(uint32_t BaudRate)
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;	//enableIRQ channel
     NVIC_Init(&NVIC_InitStructure);	//initialize nvic
 
-    USART_ITConfig(USART2,USART_IT_IDLE|USART_IT_TC,ENABLE);//toggle on USART2 IDLE & TC interrupt
-    USART_ClearFlag(USART2,USART_FLAG_TC);//clear transmittion complete flag
+    USART_ITConfig(USART2,USART_IT_IDLE,ENABLE);//toggle on USART2 IDLE interrupt
     USART_DMACmd(USART2,USART_DMAReq_Tx|USART_DMAReq_Rx,ENABLE);//enable USART DMA Tx&Rx request
     USART_Cmd(USART2,ENABLE);//enable usart2
 }
@@ -152,12 +151,5 @@ void USART2_IRQHandler(void)
     DMA_SetCurrDataCounter(DMA1_Channel5,USART_DMA_RXSIZE);
     DMA_Cmd(DMA1_Channel5,ENABLE); 
     USART_ClearITPendingBit(USART2,USART_IT_IDLE);
-  }
-  else if(USART_GetITStatus(USART2,USART_IT_TC) != RESET) //if Tx completed
-  {
-    //disable Tx DMA channel and clear data counter
-    DMA_Cmd(DMA1_Channel4,DISABLE);
-    DMA_SetCurrDataCounter(DMA1_Channel4,0);
-    USART_ClearITPendingBit(USART2,USART_IT_TC);
   }
 }

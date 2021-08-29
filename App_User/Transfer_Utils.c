@@ -33,7 +33,7 @@ static uint8_t Get_RSSI_Level(int32_t rssi_10x_int)
   */
 static void TextSkimSpace(char *dst, char *src, uint8_t len_limit)
 {
-  while ((*src != '\0') && (src < src + len_limit))
+  while ((*src != '\0') && (len_limit--))
   {
     *dst = *src;//do copy and move after source pointer
     src++;
@@ -79,7 +79,7 @@ static bool BLE_WaitCommandAck(char* AT_Cmd, const char* WaitFor, uint16_t Timeo
 static void BLE_ShowName(void)
 {
   uint16_t cnt = 0;
-  char AT_Cmd[] = "AT+NAME";
+  char AT_Cmd[] = "AT+NAME=?";
 
   HW_USART_DMA_RxClear();
   HW_USART_DMA_SendBuffer((uint8_t*)AT_Cmd,strlen(AT_Cmd));
@@ -104,7 +104,7 @@ static bool BLE_SetName(char* name)
   char AT_Cmd[32] = {0};
   bool result;
 
-  sprintf(AT_Cmd,"AT+NAME=%12s",name);
+  sprintf(AT_Cmd,"AT+NAME=%s",name);
   result = BLE_WaitCommandAck(AT_Cmd,"OK",200);
   return result;
 }
@@ -142,30 +142,30 @@ void UART_ParseCmd(char* CmdStr)
 {
   if(CmdStr[0] == '$')
   {
-    if(!strncmp(CmdStr,"$V",2))
+    if(!strncmp(CmdStr+1,"V",1))
     {
       UART_ShowBuildInfo();
     }
-    else if(!strncmp(CmdStr,"$BATT",5))
+    else if(!strncmp(CmdStr+1,"BATT",4))
     {
       Battery_CheckVoltage();
     }
-    else if(!strncmp(CmdStr,"$NAME",5))
+    else if(!strncmp(CmdStr+1,"NAME",4))
     {
       char* pos;
       if((pos=strchr(CmdStr,'=')) != NULL)
       {
         if(BLE_SetName(pos+1))
-          MSG("OK!\r\n");
+          MSG("OK!");
         else
-          MSG("Fail!\r\n");
+          MSG("Fail!");
       }
       else
         BLE_ShowName();
     }
     else
     {
-      MSG("Unsupported command.\r\n");
+      MSG("Unsupported command.");
     }
   }
   else if(CmdStr[0] == '?')
@@ -174,8 +174,9 @@ void UART_ParseCmd(char* CmdStr)
   }
   else
   {
-    MSG("Bad command, type '?' for help.\r\n");
+    MSG("Bad command, type '?' for help.");
   }
+  MSG("\r\n");
 }
 /**
   * @brief  Transfer LBJ message and rssi via BLE interface
@@ -209,7 +210,7 @@ void BLE_TransferLBJ(POCSAG_RESULT *POCSAG_Msg, int16_t rssi_10x_int)
     dir_ch = 'X';
   //make up LBJ message BLE datagram
   //e.g. $X,50229,104,1168.0,-105.0,2$
-  sprintf(BLE_DataGram,"$%c,%s,%s,%s,%hd.%hd,%hhu$",
+  sprintf(BLE_DataGram,"$%c,%s,%s,%s,%hd.%hd,%hu$",
           dir_ch,LBJ_Info[0],LBJ_Info[1],LBJ_Info[2],
           rssi_10x_int/10,(0-rssi_10x_int)%10,
           Get_RSSI_Level(rssi_10x_int));        
@@ -255,7 +256,7 @@ bool BLE_CheckPresence(void)
 void BLE_SendBatteryAlarm(void)
 {
   uint16_t vbat  = GetBatteryVoltage();
-  char BLE_Msg[16] = {0};
+  char BLE_Msg[32] = {0};
 
   sprintf(BLE_Msg,"#BATT_ALM:%hu#",vbat);
   HW_USART_DMA_SendBuffer((uint8_t*)BLE_Msg,
@@ -270,9 +271,9 @@ void BLE_SendBatteryVoltage(void)
 {
   uint16_t vbat  = GetBatteryVoltage();
   uint8_t level = GetBatteryLevel(vbat);
-  char BLE_Msg[16] = {0};
+  char BLE_Msg[32] = {0};
 
-  sprintf(BLE_Msg,"#VBAT:%hu,%hhu#",vbat,level);
+  sprintf(BLE_Msg,"#VBAT:%hu,%hu#",vbat,level);
   HW_USART_DMA_SendBuffer((uint8_t*)BLE_Msg,
                           strlen(BLE_Msg)); 
 }

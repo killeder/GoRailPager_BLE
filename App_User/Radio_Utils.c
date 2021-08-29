@@ -73,7 +73,7 @@ void RF_RxData_Handler(void)
 									  //with current batch of raw data
 
 		MSG("\r\n[LBJ Message Arrival]\r\n");
-		MSG("Received %u bytes of raw data.\r\n",actual_len);
+		MSG("Received %u bytes of raw data\r\n",actual_len);
 		MSG("RSSI:%d.%d\r\n",rssi_10x_int/10, (0-rssi_10x_int)%10);
 		MSG("LQI:%u\r\n",lqi);
 		MSG("Raw data:\r\n");
@@ -88,9 +88,9 @@ void RF_RxData_Handler(void)
 												 actual_len,true);							     		 
 		if(state == POCSAG_ERR_NONE)
 		{										
-			MSG("Address:%u,Function:%d.\r\n",PocsagMsg.Address,PocsagMsg.FuncCode);
+			MSG("Address:%u,Function:%d\r\n",PocsagMsg.Address,PocsagMsg.FuncCode);
 												//show address code and function code
-			MSG("LBJ Message:%s.\r\n",PocsagMsg.txtMsg);//show decoded text message
+			MSG("LBJ Message:%s\r\n",PocsagMsg.txtMsg);//show decoded text message
 			if(PocsagMsg.Address == LBJ_MESSAGE_ADDR)
 			{
 				//transfer LBJ message & rssi via BLE

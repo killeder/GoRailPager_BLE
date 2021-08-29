@@ -72,9 +72,12 @@ int main(void)
 		{
 			if(bRadioDataArrival)
 			{
+				//blink status led while handling RF rx data
+				STATUS_LED_ON();
 				//Radio data rx and transfer LBJ message			{
 				RF_RxData_Handler();//Handle rx data on data arrival
 				//Clear rx data arrival flag after handle it
+				STATUS_LED_OFF();
 				bRadioDataArrival = false;
 			}
 		}

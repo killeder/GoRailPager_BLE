@@ -43,9 +43,9 @@ void LedBlinkHandler(void)
 		{ STATUS_LED_TOGGLE(); cnt_status_blink = 0; }
 		break;
 	case BLINK_SLOW:
-		if(cnt_status_blink <= 50) {STATUS_LED_ON();}	//on 500ms
+		if(cnt_status_blink <= 20) {STATUS_LED_ON();}	//on 200ms
 		else {STATUS_LED_OFF();}			//off 1000ms
-		if(++cnt_status_blink >= 150)				//cycle 1500ms
+		if(++cnt_status_blink >= 1800)				//cycle 1800ms
 			cnt_status_blink = 0;
 		break;
 	case BLINK_OFF:

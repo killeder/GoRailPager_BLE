@@ -60,7 +60,7 @@ bool Battery_CheckVoltage(void)
     MSG("Battery check:");
     if(level > 0)
     {
-        MSG("%umV,level%u,OK.\r\n",vbat,level);
+        MSG("%umV,Level%u,OK!\r\n",vbat,level);
         return true;
     }
     else

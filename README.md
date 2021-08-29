@@ -94,7 +94,8 @@ CC1101 shoud be configured an follow:
 | :------------: | :------------: | :------------: |
 | $AT | Check HC-08 module presence  | OK|
 | $AT+NAME | Get BLE name  | (e.g.)LBJ_Pager|
-| $AT+NAME=xxx | Set BLE name to "xxx"  | OKsetNAME|
+| $AT+NAME=xxx
+ | Set BLE name to "xxx"  | OKsetNAME|
 
 >After BLE connected, we can transmit the raw data what we want the data terminal be received directly through the serial port, for this pattern of data transfer, please view next section for details.
 
