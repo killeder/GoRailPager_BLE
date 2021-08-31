@@ -86,7 +86,7 @@ void HW_USART_DMA_Init(uint32_t baudrate)
   DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
   DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
   DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
   DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
   DMA_Init(DMA1_Channel5,&DMA_InitStructure);
   DMA_Cmd(DMA1_Channel5,ENABLE);  //enable rx DMA channel
@@ -96,6 +96,7 @@ void HW_USART_DMA_Init(uint32_t baudrate)
   DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)USART_DMA_TxBuffer;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
   DMA_InitStructure.DMA_BufferSize = 0;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;//make priority higher than rx dma channel
   DMA_Init(DMA1_Channel4,&DMA_InitStructure);
   //notice:do not enalbe Tx DMA channel here, enable it only before data
   //sending, and disable it after data sending completed
@@ -128,9 +129,6 @@ void HW_USART_DMA_RxClear(void)
   USART_DMA_RxLength = 0;
   bUSART_DMA_RxFinish = false;
   memset(USART_DMA_RxBuffer,0,USART_DMA_RXSIZE);
-  //disable Tx DMA channel and clear data counter
-  DMA_Cmd(DMA1_Channel4,DISABLE);
-  DMA_SetCurrDataCounter(DMA1_Channel4,0);
   //re-enable Rx DMA channel and reset data counter
   DMA_Cmd(DMA1_Channel5,DISABLE);
   DMA_SetCurrDataCounter(DMA1_Channel5,USART_DMA_RXSIZE);
@@ -144,12 +142,15 @@ void USART2_IRQHandler(void)
 {
 	if(USART_GetITStatus(USART2, USART_IT_IDLE) != RESET)  //if IDLE interruption arrived
 	{
-    DMA_Cmd(DMA1_Channel5,DISABLE);   
-    USART_DMA_RxLength = USART_DMA_RXSIZE - DMA_GetCurrDataCounter(DMA1_Channel5);
-    bUSART_DMA_RxFinish = true;
-    //re-enable Rx DMA channel for receiving next dataframe
-    DMA_SetCurrDataCounter(DMA1_Channel5,USART_DMA_RXSIZE);
-    DMA_Cmd(DMA1_Channel5,ENABLE); 
+    if(bUSART_DMA_RxFinish == false)
+    {
+      DMA_Cmd(DMA1_Channel5,DISABLE);   
+      USART_DMA_RxLength = USART_DMA_RXSIZE - DMA_GetCurrDataCounter(DMA1_Channel5);
+      bUSART_DMA_RxFinish = true;
+      //re-enable Rx DMA channel for receiving next dataframe
+      DMA_SetCurrDataCounter(DMA1_Channel5,USART_DMA_RXSIZE);
+      DMA_Cmd(DMA1_Channel5,ENABLE);
+    }
     USART_ClearITPendingBit(USART2,USART_IT_IDLE);
   }
 }

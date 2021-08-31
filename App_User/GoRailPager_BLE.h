@@ -39,7 +39,7 @@
 #endif
 /* Version and build info strings */
 #define APP_NAME_STR "GoRailPager_BLE"
-#define VERTION_STR "1.0.0"
+#define VERTION_STR "1.0.1"
 #define BUILD_DATE_STR __DATE__
 #define BUILD_TIME_STR __TIME__
 #endif
