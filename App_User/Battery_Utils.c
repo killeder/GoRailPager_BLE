@@ -9,7 +9,7 @@
 **/
 #include "GoRailPager_BLE.h"
 //define battery level "notch" in mV
-const uint16_t Batt_Levels[] = {3650U,3720U,3800U,3900U,4000U};
+const uint16_t Batt_Levels[] = {3375U,3500U,3700U,3800U,4000U};
 volatile bool bCheckBattery_Flag = false;    //flag for battery check
 /**
   * @brief  get battery voltage in mV, e.g. 3700 signifies 3700mV
